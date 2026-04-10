@@ -485,6 +485,7 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     const char *obj_id;
     char *short_name;
     char *sep;
+    char *tmp;
     struct name_and_type_identifier authentik_name_and_type_identifier = {
                             .user_identifier_attr = "username",
                             .group_identifier_attr = "name",
@@ -502,7 +503,6 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         return EINVAL;
     }
 
-    // base_url = /api/v3/core/ ?
     switch(oidc_cmd) {
     case GET_USER:
     case GET_USER_GROUPS:
@@ -538,8 +538,8 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-    //filter_enc = filter; // TODO: URL encode?
-    filter_enc = url_encode_string(rest_ctx, filter);
+    filter_enc = filter; // TODO: URL encode?
+    //filter_enc = url_encode_string(rest_ctx, filter);
 
     switch (oidc_cmd) {
     case GET_USER:
@@ -574,10 +574,19 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-    // FIXME: get_str_attr will likely not work. Write own?
     // This should return the unique id (Authentik pk?) - this is an INTEGER for users and a UUID for groups
-    obj_id = get_str_attr_from_embed_json_string(rest_ctx, get_http_data(rest_ctx),
-                                                 "results", "pk");
+     obj_id = get_str_attr_from_embed_json_string(rest_ctx, get_http_data(rest_ctx), "results", "pk");
+
+
+    // tmp = get_json_string_array_from_json_string(rest_ctx, get_http_data(rest_ctx), "results");
+    // DEBUG(SSSDBG_OP_FAILURE, "results: %s\n", tmp);
+
+    // // char* tmp_ptr = &tmp[0];
+
+    // obj_id =get_str_attr_from_json_array_string(rest_ctx, tmp, "pk");
+    // DEBUG(SSSDBG_OP_FAILURE, "obj id: [%s]\n", obj_id);
+
+
     if (obj_id == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to read mandatory object id.\n");
         ret = EINVAL;
@@ -623,9 +632,17 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
 done:
     if (ret == EOK && out != NULL) {
+        DEBUG(SSSDBG_OP_FAILURE, "http_data return: [%s]\n", get_http_data(rest_ctx));
+        tmp = get_json_string_array_from_json_string(mem_ctx, get_http_data(rest_ctx), "results");
+        DEBUG(SSSDBG_OP_FAILURE, "json_string return: [%s]\n", tmp);
+
+        if (tmp == NULL) {
+            DEBUG(SSSDBG_OP_FAILURE, "Failed to copy output data.\n");
+            ret = ENOMEM;
+        }
         ret = add_posix_to_json_string_array(mem_ctx,
                                                 &authentik_name_and_type_identifier,
-                                                0, get_http_data(rest_ctx), out);
+                                                0, tmp, out);
         if (ret != EOK) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to add POSIX data.\n");
         }

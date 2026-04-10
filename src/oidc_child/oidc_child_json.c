@@ -37,10 +37,27 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
     json_t *tmp;
     char *str;
 
-    tmp = json_object_get(root, attr);
+    DEBUG(SSSDBG_OP_FAILURE, "GJS - root object: [%s]\n", json_dumps(root,0));
+    DEBUG(SSSDBG_OP_FAILURE, "GJS - attr: [%s]\n", attr);
+
+    tmp = json_object_get(root, attr); // FUCK this - this is an int in the case of pk - need to cast
     if (!json_is_string(tmp)) {
+        if json_is_integer(tmp) {
+            DEBUG(SSSDBG_OP_FAILURE, "GJS - tmp is AN INTEGER - converting\n");
+            char buffer[64];
+            json_int_t iVal = json_integer_value(tmp);
+            snprintf(buffer, sizeof(buffer), "%" JSON_INTEGER_FORMAT, iVal);
+            str = talloc_strdup(mem_ctx, buffer);
+            if (str == NULL) {
+                DEBUG(SSSDBG_OP_FAILURE, "Failed to copy '%s' string.\n", attr);
+                return NULL;
+            }
+            DEBUG(SSSDBG_OP_FAILURE, "GJS - convert result: [%s]\n", str);
+            return str;
+
+        }
         DEBUG(SSSDBG_OP_FAILURE,
-              "Result does not contain the '%s' string.\n", attr);
+              "Result does not contain the field '%s'.\n", attr);
         return NULL;
     }
 
@@ -50,6 +67,7 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
         return NULL;
     }
 
+    DEBUG(SSSDBG_OP_FAILURE, "GJS - result: [%s]\n", str);
     return str;
 }
 
@@ -554,7 +572,11 @@ const char *get_str_attr_from_json_array_string(TALLOC_CTX *mem_ctx,
     json_t *result = NULL;
     const char *attr;
 
+    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - json_str: %s\n", json_str);
+
     result = json_loads(json_str, 0, &json_error);
+    DEBUG(SSSDBG_OP_FAILURE, "json_loads error: [%s]\n", json_error.text);
+
     if (result == NULL) {
         DEBUG(SSSDBG_OP_FAILURE,
               "Failed to parse json data on line [%d]: [%s].\n",
@@ -567,6 +589,8 @@ const char *get_str_attr_from_json_array_string(TALLOC_CTX *mem_ctx,
         json_decref(result);
         return NULL;
     }
+    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - Result: %s\n", json_string_value(result));
+    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - Result[0]: [%s]\n", json_string_value(json_array_get(result, 0)));
 
     attr = get_json_string(mem_ctx, json_array_get(result, 0), attr_name);
     if (attr == NULL) {
@@ -596,6 +620,7 @@ const char *get_str_attr_from_embed_json_string(TALLOC_CTX *mem_ctx,
               json_error.line, json_error.text);
         return NULL;
     }
+    DEBUG(SSSDBG_OP_FAILURE, "result object: [%s]\n", json_dumps(result,0));
 
     embed = json_object_get(result, embed_attr_name);
     if (embed == NULL) {
@@ -603,6 +628,7 @@ const char *get_str_attr_from_embed_json_string(TALLOC_CTX *mem_ctx,
                                  embed_attr_name);
         goto done;
     }
+    DEBUG(SSSDBG_OP_FAILURE, "embed object: [%s]\n", json_dumps(embed,0));
 
     if (!json_is_array(embed)) {
         DEBUG(SSSDBG_OP_FAILURE, "Json array expected.\n");
