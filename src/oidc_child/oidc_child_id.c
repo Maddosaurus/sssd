@@ -692,7 +692,7 @@ errno_t oidc_get_id(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
                               libcurl_debug, ca_db, client_id, client_secret,
                               token_endpoint, scope, bearer_token, rest_ctx,
                               out);
-    } else if (idp_type != NULL && strcasecmp(idp_type, "authentik") == 0) {
+    } else if (idp_type != NULL && strncasecmp(idp_type, "authentik:",10) == 0) {
         ret = authentik_lookup(mem_ctx, oidc_cmd, base_url, input, input_type,
                               libcurl_debug, ca_db, client_id, client_secret,
                               token_endpoint, scope, bearer_token, rest_ctx,
