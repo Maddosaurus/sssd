@@ -461,6 +461,7 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
         goto done;
     }
 
+    //post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_ctx->device_code);
     post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_enc);
     if (post_data == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to generate POST data.\n");

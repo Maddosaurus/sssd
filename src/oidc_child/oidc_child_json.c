@@ -359,6 +359,7 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
     json_error_t json_error;
 
     root = json_loads(get_http_data(dc_ctx->rest_ctx), 0, &json_error);
+    DEBUG(SSSDBG_OP_FAILURE, "parse_result - root object: [%s]\n", json_dumps(root,0));
     if (root == NULL) {
         DEBUG(SSSDBG_OP_FAILURE,
               "Failed to parse json data on line [%d]: [%s].\n",

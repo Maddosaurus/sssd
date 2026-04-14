@@ -219,6 +219,7 @@ static errno_t create_auth_send_buffer(TALLOC_CTX *mem_ctx,
         break;
     case SSS_PAM_AUTHENTICATE:
         send_data = get_stored_request_data(buf, idp_auth_ctx, pd);
+        DEBUG(SSSDBG_OP_FAILURE, "get_stored_request_data: %s \n", send_data);
         if (send_data == NULL) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to get stored device code data.\n");
             ret = ENOENT;
