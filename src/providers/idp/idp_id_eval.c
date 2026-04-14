@@ -67,7 +67,7 @@ static errno_t store_json_user(struct idp_id_ctx *idp_id_ctx, json_t *user,
     }
     if (!json_is_string(uuid)) {
         DEBUG(SSSDBG_OP_FAILURE,
-              "JSON user object does not contain 'id' string.\n");
+              "JSON user object does not contain 'id' or 'uuid' string.\n");
         ret = EINVAL;
         goto done;
     }
@@ -168,8 +168,11 @@ static errno_t store_json_group(struct idp_id_ctx *idp_id_ctx, json_t *group,
 
     uuid = json_object_get(group, "id");
     if (!json_is_string(uuid)) {
+        uuid = json_object_get(group, "pk");
+    }
+    if (!json_is_string(uuid)) {
         DEBUG(SSSDBG_OP_FAILURE,
-              "JSON group object does not contain 'id' string.\n");
+              "JSON group object does not contain 'id' or 'pk' string.\n");
         ret = EINVAL;
         goto done;
     }
@@ -202,6 +205,9 @@ static errno_t store_json_group(struct idp_id_ctx *idp_id_ctx, json_t *group,
     ret = sysdb_store_group(dom, fqdn, gid, attrs, cache_timeout, 0);
 
     if (user_name != NULL) {
+        DEBUG(SSSDBG_OP_FAILURE,
+              "sysdb_add_group_member: dom: %s, fqdn: %s user_name: %s.\n",
+              dom, fqdn, user_name);
         ret = sysdb_add_group_member(dom, fqdn, user_name, SYSDB_MEMBER_USER,
                                      false);
             if (ret != EOK) {

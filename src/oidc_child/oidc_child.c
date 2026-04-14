@@ -638,11 +638,14 @@ int main(int argc, const char *argv[])
         DEBUG(SSSDBG_OP_FAILURE, "Failed to parse device code reply.\n");
         goto done;
     }
+    DEBUG(SSSDBG_OP_FAILURE, "Successfully got device code reply.\n");
 
     trace_device_code(dc_ctx, (opts.oidc_cmd == GET_DEVICE_CODE));
 
     ret = get_token(main_ctx, dc_ctx, opts.client_id, opts.client_secret,
                     (opts.oidc_cmd == GET_DEVICE_CODE));
+    DEBUG(SSSDBG_OP_FAILURE, "Back from get_token: %d.\n", ret);
+
     if (ret != EOK) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to get user token.\n");
         goto done;
@@ -745,6 +748,7 @@ int main(int argc, const char *argv[])
     }
 
 success:
+    DEBUG(SSSDBG_IMPORTANT_INFO, "Ran command %d\n", opts.oidc_cmd);
     DEBUG(SSSDBG_IMPORTANT_INFO, "oidc_child finished successful!\n");
     exit_status = EXIT_SUCCESS;
 

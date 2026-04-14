@@ -538,8 +538,7 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-    filter_enc = filter; // TODO: URL encode?
-    //filter_enc = url_encode_string(rest_ctx, filter);
+    filter_enc = filter;
 
     switch (oidc_cmd) {
     case GET_USER:
@@ -576,16 +575,6 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
     // This should return the unique id (Authentik pk?) - this is an INTEGER for users and a UUID for groups
      obj_id = get_str_attr_from_embed_json_string(rest_ctx, get_http_data(rest_ctx), "results", "pk");
-
-
-    // tmp = get_json_string_array_from_json_string(rest_ctx, get_http_data(rest_ctx), "results");
-    // DEBUG(SSSDBG_OP_FAILURE, "results: %s\n", tmp);
-
-    // // char* tmp_ptr = &tmp[0];
-
-    // obj_id =get_str_attr_from_json_array_string(rest_ctx, tmp, "pk");
-    // DEBUG(SSSDBG_OP_FAILURE, "obj id: [%s]\n", obj_id);
-
 
     if (obj_id == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to read mandatory object id.\n");
@@ -634,7 +623,6 @@ done:
     if (ret == EOK && out != NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "http_data return: [%s]\n", get_http_data(rest_ctx));
         tmp = get_json_string_array_from_json_string(mem_ctx, get_http_data(rest_ctx), "results");
-        DEBUG(SSSDBG_OP_FAILURE, "json_string return: [%s]\n", tmp);
 
         if (tmp == NULL) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to copy output data.\n");
@@ -728,7 +716,6 @@ errno_t oidc_get_id(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     }
 
 done:
-
     talloc_free(rest_ctx);
     return ret;
 }

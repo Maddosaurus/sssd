@@ -37,13 +37,9 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
     json_t *tmp;
     char *str;
 
-    DEBUG(SSSDBG_OP_FAILURE, "GJS - root object: [%s]\n", json_dumps(root,0));
-    DEBUG(SSSDBG_OP_FAILURE, "GJS - attr: [%s]\n", attr);
-
     tmp = json_object_get(root, attr); // FUCK this - this is an int in the case of pk - need to cast
     if (!json_is_string(tmp)) {
         if json_is_integer(tmp) {
-            DEBUG(SSSDBG_OP_FAILURE, "GJS - tmp is AN INTEGER - converting\n");
             char buffer[64];
             json_int_t iVal = json_integer_value(tmp);
             snprintf(buffer, sizeof(buffer), "%" JSON_INTEGER_FORMAT, iVal);
@@ -52,7 +48,6 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
                 DEBUG(SSSDBG_OP_FAILURE, "Failed to copy '%s' string.\n", attr);
                 return NULL;
             }
-            DEBUG(SSSDBG_OP_FAILURE, "GJS - convert result: [%s]\n", str);
             return str;
 
         }
@@ -67,7 +62,6 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
         return NULL;
     }
 
-    DEBUG(SSSDBG_OP_FAILURE, "GJS - result: [%s]\n", str);
     return str;
 }
 
@@ -429,8 +423,10 @@ errno_t parse_token_result(struct devicecode_ctx *dc_ctx,
     }
 
     tmp = json_object_get(result, "error");
+    DEBUG(SSSDBG_OP_FAILURE, "Result of call: %s.\n", json_dumps(result,0));
     if (json_is_string(tmp)) {
         if (strcmp(json_string_value(tmp), "authorization_pending") == 0) {
+            DEBUG(SSSDBG_OP_FAILURE, "Pending auth - returning EAGAIN.\n");
             json_decref(result);
             return EAGAIN;
         } else if (strcmp(json_string_value(tmp), "slow_down") == 0) {
@@ -620,7 +616,6 @@ const char *get_str_attr_from_embed_json_string(TALLOC_CTX *mem_ctx,
               json_error.line, json_error.text);
         return NULL;
     }
-    DEBUG(SSSDBG_OP_FAILURE, "result object: [%s]\n", json_dumps(result,0));
 
     embed = json_object_get(result, embed_attr_name);
     if (embed == NULL) {
@@ -628,7 +623,6 @@ const char *get_str_attr_from_embed_json_string(TALLOC_CTX *mem_ctx,
                                  embed_attr_name);
         goto done;
     }
-    DEBUG(SSSDBG_OP_FAILURE, "embed object: [%s]\n", json_dumps(embed,0));
 
     if (!json_is_array(embed)) {
         DEBUG(SSSDBG_OP_FAILURE, "Json array expected.\n");
