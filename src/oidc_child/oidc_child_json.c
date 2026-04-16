@@ -363,16 +363,12 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
 
     DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw response: %s\n", get_http_data(dc_ctx->rest_ctx));
 
-    if(strstr(get_http_data(dc_ctx->rest_ctx), "device_code") == NULL){
-        DEBUG(SSSDBG_OP_FAILURE, "parse_result - didn't find device_code\n");
-
-        root = json_loads(get_http_data(dc_ctx->rest_ctx), 0, &json_error);
-        DEBUG(SSSDBG_OP_FAILURE, "parse_result - root object: %s\n", json_dumps(root,0));
-    } else {
+    root = json_loads(get_http_data(dc_ctx->rest_ctx), 0, &json_error);
+    DEBUG(SSSDBG_OP_FAILURE, "parse_result - root object: %s\n", json_dumps(root,0));
+    if (root == NULL) {
 
         // TODO: Only do this if the string contains "device_code" - sanitizing that token
         http_data = strdup(get_http_data(dc_ctx->rest_ctx));
-        DEBUG(SSSDBG_OP_FAILURE, "parse_result - sanitizing string: %s\n", http_data);
         char leading[256];
         char raw_code[256];
         char trailing[256];
@@ -385,8 +381,6 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
 
 
         if(code_start != NULL) {
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - splitting first string\n");
-
             size_t leading_len = code_start - http_data;
             strncpy(leading, http_data, leading_len);
             leading[leading_len] = '\0';
@@ -394,11 +388,7 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
             strcpy(tmp, code_start+strlen(lead_del));
 
             char *code_end = strstr(tmp, tail_del);
-
-
             if(code_end != NULL) {
-                DEBUG(SSSDBG_OP_FAILURE, "parse_result - splitting second string\n");
-
                 size_t raw_code_len = code_end - tmp;
                 strncpy(raw_code, tmp, raw_code_len);
                 raw_code[raw_code_len] = '\0';
@@ -410,34 +400,46 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
             DEBUG(SSSDBG_OP_FAILURE, "parse_result - code: %s\n", raw_code);
             DEBUG(SSSDBG_OP_FAILURE, "parse_result - trail: %s\n", trailing);
 
-            char *code_enc;
-            code_enc = url_encode_string(dc_ctx, raw_code);
-            if (code_enc == NULL) {
-                DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
-                ret = ENOMEM;
-                goto done;
-            }
+            // char *code_enc;
+            // code_enc = url_encode_string(dc_ctx, raw_code);
+            // if (code_enc == NULL) {
+            //     DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
+            //     ret = ENOMEM;
+            //     goto done;
+            // }
 
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - encoded code: %s\n", code_enc);
+            // DEBUG(SSSDBG_OP_FAILURE, "parse_result - encoded code: %s\n", code_enc);
 
-            char *res;
-            sprintf(res, "%s%s%s", leading, code_enc, trailing);
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - final object: %s\n", code_enc);
 
-            // try again with the sanitized string
-            root = json_loads(res, 0, &json_error);
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - res object: %s\n", json_dumps(root,0));
-            if (root == NULL) {
-                DEBUG(SSSDBG_OP_FAILURE,
-                    "Failed to parse json data on line [%d]: [%s].\n",
-                    json_error.line, json_error.text);
-                ret = EINVAL;
-                goto done;
-            }
+            // char *res;
+            // sprintf(res, "%s%s%s", leading, code_enc, trailing);
+            // DEBUG(SSSDBG_OP_FAILURE, "parse_result - final object: %s\n", code_enc);
+
+
         }
+
+        // if(code_start != NULL) {
+        //     char code_st[strlen(http_data)]; // FIXME: That's more than needed
+        //     strcpy(code_st, code_start + strlen(lead_del));
+        //     DEBUG(SSSDBG_OP_FAILURE, "parse_result - code start: %s\n", code_st);
+
+        //     char *code_end = strstr(code_st, tail_del);
+        //     if(code_end != NULL) {
+        //         char code_rest[strlen(http_data)];
+        //         char code[strlen(http_data)];
+        //         strcpy(code, code_end + strlen(tail_del));
+        //         code_end = '\0';
+        //         DEBUG(SSSDBG_OP_FAILURE, "parse_result - code: %s\n", code);
+        //         DEBUG(SSSDBG_OP_FAILURE, "parse_result - code end: %s\n", code_rest);
+        //     }
+        // }
+
+        DEBUG(SSSDBG_OP_FAILURE,
+              "Failed to parse json data on line [%d]: [%s].\n",
+              json_error.line, json_error.text);
+        ret = EINVAL;
+        goto done;
     }
-
-
 
     dc_ctx->user_code = get_json_string(dc_ctx, root, "user_code");
     if (dc_ctx->user_code != NULL) {
