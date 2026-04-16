@@ -40,6 +40,7 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
     char *str;
 
     tmp = json_object_get(root, attr); // FUCK this - this is an int in the case of pk - need to cast
+    DEBUG(SSSDBG_OP_FAILURE, "get_json_string: %s.\n", json_string_value(tmp));
     if (!json_is_string(tmp)) {
         if json_is_integer(tmp) {
             char buffer[64];
@@ -359,96 +360,48 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
     int ret;
     json_t *root = NULL;
     json_error_t json_error;
-    char * http_data;
+    char *dc_enc;
+    // char * http_data;
 
     DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw response: %s\n", get_http_data(dc_ctx->rest_ctx));
 
     root = json_loads(get_http_data(dc_ctx->rest_ctx), 0, &json_error);
     DEBUG(SSSDBG_OP_FAILURE, "parse_result - root object: %s\n", json_dumps(root,0));
     if (root == NULL) {
-
-        // TODO: Only do this if the string contains "device_code" - sanitizing that token
-        http_data = strdup(get_http_data(dc_ctx->rest_ctx));
-        char leading[256];
-        char raw_code[256];
-        char trailing[256];
-        char tmp[256];
-
-
-        char lead_del[] = "device_code\":\"";
-        char tail_del[] = "\",\"";
-        char *code_start = strstr(http_data, lead_del);
-
-
-        if(code_start != NULL) {
-            size_t leading_len = code_start - http_data;
-            strncpy(leading, http_data, leading_len);
-            leading[leading_len] = '\0';
-
-            strcpy(tmp, code_start+strlen(lead_del));
-
-            char *code_end = strstr(tmp, tail_del);
-            if(code_end != NULL) {
-                size_t raw_code_len = code_end - tmp;
-                strncpy(raw_code, tmp, raw_code_len);
-                raw_code[raw_code_len] = '\0';
-            }
-
-            strcpy(trailing, code_end+strlen(tail_del));
-
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - lead: %s\n", leading);
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - code: %s\n", raw_code);
-            DEBUG(SSSDBG_OP_FAILURE, "parse_result - trail: %s\n", trailing);
-
-            // char *code_enc;
-            // code_enc = url_encode_string(dc_ctx, raw_code);
-            // if (code_enc == NULL) {
-            //     DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
-            //     ret = ENOMEM;
-            //     goto done;
-            // }
-
-            // DEBUG(SSSDBG_OP_FAILURE, "parse_result - encoded code: %s\n", code_enc);
-
-
-            // char *res;
-            // sprintf(res, "%s%s%s", leading, code_enc, trailing);
-            // DEBUG(SSSDBG_OP_FAILURE, "parse_result - final object: %s\n", code_enc);
-
-
-        }
-
-        // if(code_start != NULL) {
-        //     char code_st[strlen(http_data)]; // FIXME: That's more than needed
-        //     strcpy(code_st, code_start + strlen(lead_del));
-        //     DEBUG(SSSDBG_OP_FAILURE, "parse_result - code start: %s\n", code_st);
-
-        //     char *code_end = strstr(code_st, tail_del);
-        //     if(code_end != NULL) {
-        //         char code_rest[strlen(http_data)];
-        //         char code[strlen(http_data)];
-        //         strcpy(code, code_end + strlen(tail_del));
-        //         code_end = '\0';
-        //         DEBUG(SSSDBG_OP_FAILURE, "parse_result - code: %s\n", code);
-        //         DEBUG(SSSDBG_OP_FAILURE, "parse_result - code end: %s\n", code_rest);
-        //     }
-        // }
-
-        DEBUG(SSSDBG_OP_FAILURE,
-              "Failed to parse json data on line [%d]: [%s].\n",
-              json_error.line, json_error.text);
-        ret = EINVAL;
-        goto done;
+    DEBUG(SSSDBG_OP_FAILURE,
+          "Failed to parse json data on line [%d]: [%s].\n",
+          json_error.line, json_error.text);
+    ret = EINVAL;
+    goto done;
     }
 
     dc_ctx->user_code = get_json_string(dc_ctx, root, "user_code");
     if (dc_ctx->user_code != NULL) {
         talloc_set_destructor((void *) dc_ctx->user_code, sss_erase_talloc_mem_securely);
     }
-    dc_ctx->device_code = get_json_string(dc_ctx, root, "device_code");
+
+    // FIXME: This now gets double encoded :/
+    // as get_json_string(), or more precisely, its json_string_value(), strips escapes for \ and ', this is not urlsafe anymore
+    DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw dc_ctx->device_code: %s\n", get_json_string(dc_ctx, root, "device_code"));
+    dc_enc = get_json_string(dc_ctx, root, "device_code");
+    if(dc_ctx->user_code != NULL) {
+        // when loading a stored request, there is no user code, so we skip encoding, as it is already encoded.
+        dc_enc = url_encode_string(dc_ctx, get_json_string(dc_ctx, root, "device_code"));
+    }
+
+    if (dc_enc == NULL) {
+        DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
+        ret = EINVAL;
+        goto done;
+    }
+    DEBUG(SSSDBG_OP_FAILURE, "parse_result - escaped dc_ctx->device_code: %s\n", dc_enc);
+
+    //dc_ctx->device_code = get_json_string(dc_ctx, root, "device_code");
+    dc_ctx->device_code = dc_enc;
     if (dc_ctx->device_code != NULL) {
         talloc_set_destructor((void *) dc_ctx->device_code, sss_erase_talloc_mem_securely);
     }
+
     dc_ctx->verification_uri = get_json_string(dc_ctx, root,
                                                "verification_uri");
     if (dc_ctx->verification_uri == NULL) {

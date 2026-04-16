@@ -446,7 +446,7 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
     const char *post_data_tmpl = "grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id=%s&%s=%s";
     struct curl_slist *headers = NULL;
     bool azure_fallback = false;
-    //char *dc_enc;
+    // char *dc_enc;
 
     headers = curl_slist_append(headers, ACCEPT_JSON);
     if (headers == NULL) {
@@ -462,7 +462,7 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
     // }
 
     post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_ctx->device_code);
-    //post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_enc);
+    // post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_enc);
     if (post_data == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to generate POST data.\n");
         ret = ENOMEM;
