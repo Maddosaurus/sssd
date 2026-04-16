@@ -380,7 +380,6 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
         talloc_set_destructor((void *) dc_ctx->user_code, sss_erase_talloc_mem_securely);
     }
 
-    // FIXME: This now gets double encoded :/
     // as get_json_string(), or more precisely, its json_string_value(), strips escapes for \ and ', this is not urlsafe anymore
     DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw dc_ctx->device_code: %s\n", get_json_string(dc_ctx, root, "device_code"));
     dc_enc = get_json_string(dc_ctx, root, "device_code");
