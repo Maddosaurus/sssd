@@ -40,7 +40,7 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
     char *str;
 
     tmp = json_object_get(root, attr); // FUCK this - this is an int in the case of pk - need to cast
-    DEBUG(SSSDBG_OP_FAILURE, "get_json_string: %s.\n", json_string_value(tmp));
+    DEBUG(SSSDBG_OP_FAILURE, "get_json_string for attr %s: %s.\n", attr, json_string_value(tmp));
     if (!json_is_string(tmp)) {
         if json_is_integer(tmp) {
             char buffer[64];
@@ -519,15 +519,13 @@ const char *get_user_identifier(TALLOC_CTX *mem_ctx, json_t *userinfo,
 {
     json_t *id_object = NULL;
     const char *user_identifier = NULL;
-    const char *id_attr_list[] = { "sub", "id", NULL };
+    const char *id_attr_list[] = { user_identifier_attr, "sub", "id", NULL };
     size_t c;
 
-    if (user_identifier_attr != NULL) {
-        id_attr_list[0] = user_identifier_attr;
-        id_attr_list[1] = NULL;
-    }
+
 
     for (c = 0; id_attr_list[c] != NULL; c++) {
+        DEBUG(SSSDBG_CRIT_FAILURE, "Looking for user_identifier: %s. \n", id_attr_list[c]);
         id_object = json_object_get(userinfo, id_attr_list[c]);
         if (id_object != NULL) {
             user_identifier = get_id_string(mem_ctx, id_object);
