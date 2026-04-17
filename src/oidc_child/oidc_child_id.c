@@ -483,7 +483,6 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     char *filter_enc;
     char *input_enc;
     const char *obj_id;
-    char *short_name;
     char *sep;
     char *tmp;
     struct name_and_type_identifier authentik_name_and_type_identifier = {
@@ -511,19 +510,10 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     case GET_GROUP:
     case GET_GROUP_MEMBERS:
         sep = strrchr(input, '@');
-        if (sep == NULL && sep != input) { // FIXME: Check this eval!
+        if (sep == NULL && sep != input) {
             filter = talloc_asprintf(rest_ctx, "include_users=true&name=%s", input_enc);
         } else {
-            short_name = talloc_strndup(rest_ctx, input, sep - input); // FIXME: Whats this in Authentik?
-            DEBUG(SSSDBG_OP_FAILURE, "short_name: [%s]\n", short_name);
-            if (short_name == NULL) {
-                DEBUG(SSSDBG_OP_FAILURE,
-                        "Failed to generate short name, using plain input [%s].\n",
-                        input);
-                filter = talloc_asprintf(rest_ctx, "include_users=true&search=%s" , input_enc);
-            } else {
-                filter = talloc_asprintf(rest_ctx, "include_users=true&search=%s" , short_name);
-            }
+            filter = talloc_asprintf(rest_ctx, "include_users=true&search=%s" , input_enc);
         }
         break;
     default:
@@ -621,7 +611,6 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
 done:
     if (ret == EOK && out != NULL) {
-        DEBUG(SSSDBG_OP_FAILURE, "http_data return: [%s]\n", get_http_data(rest_ctx));
         tmp = get_json_string_array_from_json_string(mem_ctx, get_http_data(rest_ctx), "results");
 
         if (tmp == NULL) {
@@ -716,6 +705,7 @@ errno_t oidc_get_id(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     }
 
 done:
+
     talloc_free(rest_ctx);
     return ret;
 }

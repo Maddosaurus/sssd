@@ -39,8 +39,7 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
     json_t *tmp;
     char *str;
 
-    tmp = json_object_get(root, attr); // FUCK this - this is an int in the case of pk - need to cast
-    DEBUG(SSSDBG_OP_FAILURE, "get_json_string for attr %s: %s.\n", attr, json_string_value(tmp));
+    tmp = json_object_get(root, attr);
     if (!json_is_string(tmp)) {
         if json_is_integer(tmp) {
             char buffer[64];
@@ -52,7 +51,6 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
                 return NULL;
             }
             return str;
-
         }
         DEBUG(SSSDBG_OP_FAILURE,
               "Result does not contain the field '%s'.\n", attr);
@@ -361,12 +359,8 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
     json_t *root = NULL;
     json_error_t json_error;
     char *dc_enc;
-    // char * http_data;
-
-    DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw response: %s\n", get_http_data(dc_ctx->rest_ctx));
 
     root = json_loads(get_http_data(dc_ctx->rest_ctx), 0, &json_error);
-    DEBUG(SSSDBG_OP_FAILURE, "parse_result - root object: %s\n", json_dumps(root,0));
     if (root == NULL) {
     DEBUG(SSSDBG_OP_FAILURE,
           "Failed to parse json data on line [%d]: [%s].\n",
@@ -380,11 +374,10 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
         talloc_set_destructor((void *) dc_ctx->user_code, sss_erase_talloc_mem_securely);
     }
 
-    // as get_json_string(), or more precisely, its json_string_value(), strips escapes for \ and ', this is not urlsafe anymore
-    DEBUG(SSSDBG_OP_FAILURE, "parse_result - raw dc_ctx->device_code: %s\n", get_json_string(dc_ctx, root, "device_code"));
+    // as get_json_string(), or more precisely, its call to json_string_value(), strips escape sequences, this is not urlsafe anymore.
     dc_enc = get_json_string(dc_ctx, root, "device_code");
     if(dc_ctx->user_code != NULL) {
-        // when loading a stored request, there is no user code, so we skip encoding, as it is already encoded.
+        // when loading a stored request, there is no user code, so we skip encoding to avoid double urlencodes.
         dc_enc = url_encode_string(dc_ctx, get_json_string(dc_ctx, root, "device_code"));
     }
 
@@ -393,14 +386,11 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
         ret = EINVAL;
         goto done;
     }
-    DEBUG(SSSDBG_OP_FAILURE, "parse_result - escaped dc_ctx->device_code: %s\n", dc_enc);
 
-    //dc_ctx->device_code = get_json_string(dc_ctx, root, "device_code");
     dc_ctx->device_code = dc_enc;
     if (dc_ctx->device_code != NULL) {
         talloc_set_destructor((void *) dc_ctx->device_code, sss_erase_talloc_mem_securely);
     }
-
     dc_ctx->verification_uri = get_json_string(dc_ctx, root,
                                                "verification_uri");
     if (dc_ctx->verification_uri == NULL) {
@@ -449,10 +439,8 @@ errno_t parse_token_result(struct devicecode_ctx *dc_ctx,
     }
 
     tmp = json_object_get(result, "error");
-    DEBUG(SSSDBG_OP_FAILURE, "Result of call: %s.\n", json_dumps(result,0));
     if (json_is_string(tmp)) {
         if (strcmp(json_string_value(tmp), "authorization_pending") == 0) {
-            DEBUG(SSSDBG_OP_FAILURE, "Pending auth - returning EAGAIN.\n");
             json_decref(result);
             return EAGAIN;
         } else if (strcmp(json_string_value(tmp), "slow_down") == 0) {
@@ -524,7 +512,6 @@ const char *get_user_identifier(TALLOC_CTX *mem_ctx, json_t *userinfo,
 
 
     for (c = 0; id_attr_list[c] != NULL; c++) {
-        DEBUG(SSSDBG_CRIT_FAILURE, "Looking for user_identifier: %s. \n", id_attr_list[c]);
         id_object = json_object_get(userinfo, id_attr_list[c]);
         if (id_object != NULL) {
             user_identifier = get_id_string(mem_ctx, id_object);
@@ -592,11 +579,7 @@ const char *get_str_attr_from_json_array_string(TALLOC_CTX *mem_ctx,
     json_t *result = NULL;
     const char *attr;
 
-    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - json_str: %s\n", json_str);
-
     result = json_loads(json_str, 0, &json_error);
-    DEBUG(SSSDBG_OP_FAILURE, "json_loads error: [%s]\n", json_error.text);
-
     if (result == NULL) {
         DEBUG(SSSDBG_OP_FAILURE,
               "Failed to parse json data on line [%d]: [%s].\n",
@@ -609,8 +592,6 @@ const char *get_str_attr_from_json_array_string(TALLOC_CTX *mem_ctx,
         json_decref(result);
         return NULL;
     }
-    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - Result: %s\n", json_string_value(result));
-    DEBUG(SSSDBG_OP_FAILURE, "Get_Str - Result[0]: [%s]\n", json_string_value(json_array_get(result, 0)));
 
     attr = get_json_string(mem_ctx, json_array_get(result, 0), attr_name);
     if (attr == NULL) {

@@ -219,7 +219,6 @@ static errno_t create_auth_send_buffer(TALLOC_CTX *mem_ctx,
         break;
     case SSS_PAM_AUTHENTICATE:
         send_data = get_stored_request_data(buf, idp_auth_ctx, pd);
-        DEBUG(SSSDBG_OP_FAILURE, "get_stored_request_data: %s \n", send_data);
         if (send_data == NULL) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to get stored device code data.\n");
             ret = ENOENT;
@@ -352,7 +351,6 @@ static void idp_auth_done(struct tevent_req *subreq)
     switch(state->pd->cmd) {
     case SSS_PAM_PREAUTH:
         ret = eval_device_auth_buf(state->idp_auth_ctx, state->pd, buf, buflen);
-        DEBUG(SSSDBG_OP_FAILURE, "eval_device_auth result: [%s].\n", state->idp_auth_ctx);
         break;
     case SSS_PAM_AUTHENTICATE:
         ret = eval_access_token_buf(state->idp_auth_ctx, state->pd, state->dom,

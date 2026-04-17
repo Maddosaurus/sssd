@@ -378,11 +378,6 @@ errno_t do_http_request(struct rest_ctx *rest_ctx, const char *uri,
     long resp_code;
     struct curl_slist *headers = NULL;
 
-    DEBUG(SSSDBG_OP_FAILURE,
-          "Calling URI: %s\n", uri);
-    DEBUG(SSSDBG_OP_FAILURE,
-          "Post Payload: %s\n", post_data);
-
     headers = curl_slist_append(headers, ACCEPT_JSON);
     if (headers == NULL) {
         DEBUG(SSSDBG_OP_FAILURE,
@@ -446,7 +441,6 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
     const char *post_data_tmpl = "grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id=%s&%s=%s";
     struct curl_slist *headers = NULL;
     bool azure_fallback = false;
-    // char *dc_enc;
 
     headers = curl_slist_append(headers, ACCEPT_JSON);
     if (headers == NULL) {
@@ -454,15 +448,7 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
               "Failed to create Accept header, trying without.\n");
     }
 
-    // dc_enc = url_encode_string(dc_ctx, dc_ctx->device_code);
-    // if (dc_enc == NULL) {
-    //     DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
-    //     ret = ENOMEM;
-    //     goto done;
-    // }
-
     post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_ctx->device_code);
-    // post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_enc);
     if (post_data == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to generate POST data.\n");
         ret = ENOMEM;
@@ -479,9 +465,6 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
             goto done;
         }
     }
-
-    DEBUG(SSSDBG_OP_FAILURE, "get_token - post_data: %s.\n", post_data);
-
 
     curl_ctx = curl_easy_init();
     if (curl_ctx == NULL) {
@@ -509,7 +492,6 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
 
         talloc_zfree(error_description);
         ret = parse_token_result(dc_ctx, &error_description);
-        DEBUG(SSSDBG_OP_FAILURE, "Result of parse_token_result: %d, EAGAIN is %d, EIO is %d.\n", ret ,EAGAIN, EIO);
         if (ret != EAGAIN) {
             if (ret == EIO && !azure_fallback && error_description != NULL
                     && strstr(error_description, AZURE_EXPECT_CODE) != NULL) {
@@ -534,16 +516,11 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
         /* only run once after getting the device code to tell the IdP we are
          * expecting that the user will connect */
         if (get_device_code) {
-            DEBUG(SSSDBG_OP_FAILURE, "get_device_code is TRUE.\n");
             if (ret == EAGAIN) {
                 ret = EOK;
             }
             break;
         }
-
-        DEBUG(SSSDBG_OP_FAILURE, "Waiting interval: %d.\n", dc_ctx->interval);
-        DEBUG(SSSDBG_OP_FAILURE, "Waiting expires in: %d.\n", dc_ctx->expires_in);
-
 
         waiting_time += dc_ctx->interval;
         if (waiting_time >= dc_ctx->expires_in) {

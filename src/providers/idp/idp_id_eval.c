@@ -205,7 +205,6 @@ static errno_t store_json_group(struct idp_id_ctx *idp_id_ctx, json_t *group,
     ret = sysdb_store_group(dom, fqdn, gid, attrs, cache_timeout, 0);
 
     if (user_name != NULL) {
-        DEBUG(SSSDBG_OP_FAILURE, "sysdb_add_group_member: fqdn: %s user_name: %s.\n", fqdn, user_name);
         ret = sysdb_add_group_member(dom, fqdn, user_name, SYSDB_MEMBER_USER,
                                      false);
             if (ret != EOK) {

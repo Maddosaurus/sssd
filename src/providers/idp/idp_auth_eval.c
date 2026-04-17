@@ -81,8 +81,6 @@ errno_t eval_device_auth_buf(struct idp_auth_ctx *idp_auth_ctx,
         goto done;
     }
 
-    DEBUG(SSSDBG_OP_FAILURE, "Saving device_code_data: %s.\n", talloc_strdup(open_req, (char *) buf));
-    // FIXME: The device code in this data needs to be sanitized - but where?
     open_req->device_code_data = talloc_strdup(open_req, (char *) buf);
     if (open_req->device_code_data == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to copy device code data.\n");
