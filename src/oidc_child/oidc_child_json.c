@@ -27,8 +27,6 @@
 #include <jose/jws.h>
 #include <jose/b64.h>
 #include <jansson.h>
-#include <stddef.h>
-#include <string.h>
 
 #include "util/strtonum.h"
 #include "oidc_child/oidc_child_util.h"

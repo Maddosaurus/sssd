@@ -23,8 +23,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <asm-generic/errno-base.h>
-#include <asm-generic/errno.h>
 #include <curl/curl.h>
 #include "util/memory_erase.h"
 #include "oidc_child/oidc_child_util.h"
