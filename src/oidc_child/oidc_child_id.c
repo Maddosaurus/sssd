@@ -480,7 +480,6 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     errno_t ret;
     char *uri;
     char *filter;
-    char *filter_enc;
     char *input_enc;
     const char *obj_id;
     char *sep;
@@ -528,16 +527,14 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-    filter_enc = filter;
-
     switch (oidc_cmd) {
     case GET_USER:
     case GET_USER_GROUPS:
-        uri = talloc_asprintf(rest_ctx, "%s/users/?%s" ,base_url, filter_enc);
+        uri = talloc_asprintf(rest_ctx, "%s/users/?%s" ,base_url, filter);
         break;
     case GET_GROUP:
     case GET_GROUP_MEMBERS:
-        uri = talloc_asprintf(rest_ctx, "%s/groups/?%s" ,base_url, filter_enc);
+        uri = talloc_asprintf(rest_ctx, "%s/groups/?%s" ,base_url, filter);
         break;
     default:
         DEBUG(SSSDBG_OP_FAILURE, "Unknown command [%d].\n", oidc_cmd);
@@ -574,11 +571,11 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
     switch (oidc_cmd) {
     case GET_USER_GROUPS:
-        uri = talloc_asprintf(rest_ctx, 
+        uri = talloc_asprintf(rest_ctx,
             "%s/groups/?include_users=false&members_by_pk=%s&page=1&page_size=100", base_url, obj_id);
         break;
     case GET_GROUP_MEMBERS:
-        uri = talloc_asprintf(rest_ctx, 
+        uri = talloc_asprintf(rest_ctx,
             "%s/users/?groups_by_pk=%s&include_groups=false&include_roles=false&page=1&page_size=1000", base_url, obj_id);
     default:
         DEBUG(SSSDBG_OP_FAILURE, "Unknown command [%d].\n", oidc_cmd);
