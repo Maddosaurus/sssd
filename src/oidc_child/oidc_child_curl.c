@@ -448,7 +448,8 @@ errno_t get_token(TALLOC_CTX *mem_ctx,
               "Failed to create Accept header, trying without.\n");
     }
 
-    post_data = talloc_asprintf(mem_ctx, post_data_tmpl, client_id, "device_code", dc_ctx->device_code);
+    post_data = talloc_asprintf(
+        mem_ctx, post_data_tmpl, client_id, "device_code", dc_ctx->device_code);
     if (post_data == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to generate POST data.\n");
         ret = ENOMEM;

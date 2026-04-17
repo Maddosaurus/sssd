@@ -563,8 +563,8 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-    // This should return the unique id (Authentik pk?) - this is an INTEGER for users and a UUID for groups
-     obj_id = get_str_attr_from_embed_json_string(rest_ctx, get_http_data(rest_ctx), "results", "pk");
+     obj_id = get_str_attr_from_embed_json_string(
+        rest_ctx, get_http_data(rest_ctx), "results", "pk");
 
     if (obj_id == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to read mandatory object id.\n");
@@ -574,10 +574,12 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
     switch (oidc_cmd) {
     case GET_USER_GROUPS:
-        uri = talloc_asprintf(rest_ctx, "%s/groups/?include_users=false&members_by_pk=%s&page=1&page_size=100", base_url, obj_id);
+        uri = talloc_asprintf(rest_ctx, 
+            "%s/groups/?include_users=false&members_by_pk=%s&page=1&page_size=100", base_url, obj_id);
         break;
     case GET_GROUP_MEMBERS:
-        uri = talloc_asprintf(rest_ctx, "%s/users/?groups_by_pk=%s&include_groups=false&include_roles=false&page=1&page_size=1000", base_url, obj_id);
+        uri = talloc_asprintf(rest_ctx, 
+            "%s/users/?groups_by_pk=%s&include_groups=false&include_roles=false&page=1&page_size=1000", base_url, obj_id);
     default:
         DEBUG(SSSDBG_OP_FAILURE, "Unknown command [%d].\n", oidc_cmd);
         ret = EINVAL;
@@ -611,7 +613,8 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
 
 done:
     if (ret == EOK && out != NULL) {
-        tmp = get_json_string_array_from_json_string(mem_ctx, get_http_data(rest_ctx), "results");
+        tmp = get_json_string_array_from_json_string(
+            mem_ctx, get_http_data(rest_ctx), "results");
 
         if (tmp == NULL) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to copy output data.\n");

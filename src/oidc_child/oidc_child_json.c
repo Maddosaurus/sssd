@@ -374,10 +374,12 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
         talloc_set_destructor((void *) dc_ctx->user_code, sss_erase_talloc_mem_securely);
     }
 
-    // as get_json_string(), or more precisely, its call to json_string_value(), strips escape sequences, this is not urlsafe anymore.
+    // as get_json_string(), or more precisely, its call to json_string_value(),
+    // strips escape sequences, this is not urlsafe anymore.
     dc_enc = get_json_string(dc_ctx, root, "device_code");
     if(dc_ctx->user_code != NULL) {
-        // when loading a stored request, there is no user code, so we skip encoding to avoid double urlencodes.
+        // when loading a stored request there is no user code, 
+        // so we skip encoding to avoid double urlencodes.
         dc_enc = url_encode_string(dc_ctx, get_json_string(dc_ctx, root, "device_code"));
     }
 
