@@ -375,11 +375,11 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
     /* as get_json_string(), or more precisely, its call to json_string_value(),
      * strips escape sequences, this is not urlsafe anymore. */
     dc_enc = get_json_string(dc_ctx, root, "device_code");
-    if(dc_ctx->user_code != NULL) {
-        /* when loading a stored request there is no user code,
-         * so we skip encoding to avoid double urlencodes. */
-        dc_enc = url_encode_string(dc_ctx->rest_ctx, get_json_string(dc_ctx, root, "device_code"));
-    }
+      if (dc_enc != NULL && dc_ctx->user_code != NULL) {
+          /* when loading a stored request there is no user code,
+           * so we skip encoding to avoid double urlencodes. */
+          dc_enc = url_encode_string(dc_ctx->rest_ctx, dc_enc);
+      }
 
     if (dc_enc == NULL) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to encode device code.\n");
