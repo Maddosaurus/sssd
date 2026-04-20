@@ -485,8 +485,8 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     char *sep;
     char *tmp;
     struct name_and_type_identifier authentik_name_and_type_identifier = {
-                            .user_identifier_attr = "pk",
-                            .group_identifier_attr = "pk",
+                            .user_identifier_attr = "username",
+                            .group_identifier_attr = "name",
                             .user_name_attr = "username",
                             .group_name_attr = "name" };
 

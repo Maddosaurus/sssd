@@ -39,7 +39,7 @@ static char *get_json_string(TALLOC_CTX *mem_ctx, const json_t *root,
 
     tmp = json_object_get(root, attr);
     if (!json_is_string(tmp)) {
-        if json_is_integer(tmp) {
+        if(json_is_integer(tmp)) {
             char buffer[64];
             json_int_t iVal = json_integer_value(tmp);
             snprintf(buffer, sizeof(buffer), "%" JSON_INTEGER_FORMAT, iVal);
@@ -378,7 +378,7 @@ errno_t parse_result(struct devicecode_ctx *dc_ctx)
     if(dc_ctx->user_code != NULL) {
         /* when loading a stored request there is no user code,
          * so we skip encoding to avoid double urlencodes. */
-        dc_enc = url_encode_string(dc_ctx, get_json_string(dc_ctx, root, "device_code"));
+        dc_enc = url_encode_string(dc_ctx->rest_ctx, get_json_string(dc_ctx, root, "device_code"));
     }
 
     if (dc_enc == NULL) {
