@@ -572,11 +572,11 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     switch (oidc_cmd) {
     case GET_USER_GROUPS:
         uri = talloc_asprintf(rest_ctx,
-            "%s/groups/?include_users=false&members_by_pk=%s&page=1&page_size=100", base_url, obj_id);
+            "%s/groups/?include_users=false&members_by_pk=%s&page=1&page_size=2000", base_url, obj_id);
         break;
     case GET_GROUP_MEMBERS:
         uri = talloc_asprintf(rest_ctx,
-            "%s/users/?groups_by_pk=%s&include_groups=false&include_roles=false&page=1&page_size=1000", base_url, obj_id);
+            "%s/users/?groups_by_pk=%s&include_groups=false&include_roles=false&page=1&page_size=2000", base_url, obj_id);
         break;
     default:
         DEBUG(SSSDBG_OP_FAILURE, "Unknown command [%d].\n", oidc_cmd);
