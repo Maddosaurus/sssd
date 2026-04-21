@@ -67,7 +67,7 @@ static errno_t store_json_user(struct idp_id_ctx *idp_id_ctx, json_t *user,
     }
     if (!json_is_string(uuid)) {
         DEBUG(SSSDBG_OP_FAILURE,
-              "JSON user object does not contain 'id' or 'uuid' string.\n");
+              "JSON user object does not contain 'id' or 'uid' string.\n");
         ret = EINVAL;
         goto done;
     }

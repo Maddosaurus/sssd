@@ -501,7 +501,7 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         return EINVAL;
     }
 
-    switch(oidc_cmd) {
+    switch (oidc_cmd) {
     case GET_USER:
     case GET_USER_GROUPS:
         filter = talloc_asprintf(rest_ctx, "username=%s", input_enc);
@@ -509,7 +509,7 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
     case GET_GROUP:
     case GET_GROUP_MEMBERS:
         sep = strrchr(input, '@');
-        if (sep == NULL && sep != input) {
+        if (sep == NULL || sep == input) {
             filter = talloc_asprintf(rest_ctx, "include_users=true&name=%s", input_enc);
         } else {
             filter = talloc_asprintf(rest_ctx, "include_users=true&search=%s" , input_enc);
@@ -560,7 +560,7 @@ errno_t authentik_lookup(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
         goto done;
     }
 
-     obj_id = get_str_attr_from_embed_json_string(
+    obj_id = get_str_attr_from_embed_json_string(
         rest_ctx, get_http_data(rest_ctx), "results", "pk");
 
     if (obj_id == NULL) {
@@ -628,7 +628,6 @@ done:
 
     return ret;
 }
-
 
 errno_t oidc_get_id(TALLOC_CTX *mem_ctx, enum oidc_cmd oidc_cmd,
                     char *idp_type,

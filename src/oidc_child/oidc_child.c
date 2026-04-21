@@ -633,7 +633,7 @@ int main(int argc, const char *argv[])
         }
     }
 
-    ret = parse_result(dc_ctx);
+    ret = parse_result(dc_ctx, opts.idp_type);
     if (ret != EOK) {
         DEBUG(SSSDBG_OP_FAILURE, "Failed to parse device code reply.\n");
         goto done;
@@ -672,7 +672,7 @@ int main(int argc, const char *argv[])
         DEBUG(SSSDBG_TRACE_ALL, "id_token: [%s].\n", dc_ctx->td->id_token_str);
 
         if (dc_ctx->jwks_uri != NULL) {
-            ret = decode_token(dc_ctx, true);
+            ret = decode_token(dc_ctx, true, opts.idp_type);
             if (ret != EOK) {
                 DEBUG(SSSDBG_OP_FAILURE, "Failed to verify tokens.\n");
                 goto done;
@@ -707,7 +707,7 @@ int main(int argc, const char *argv[])
             if (dc_ctx->jwks_uri == NULL) {
                 /* Up to here the tokens are only decoded into JSON if
                  * verification keys were provided. */
-                ret = decode_token(dc_ctx, false);
+                ret = decode_token(dc_ctx, false, opts.idp_type);
                 if (ret != EOK) {
                     DEBUG(SSSDBG_OP_FAILURE, "Failed to decode tokens, ignored.\n");
                 }
