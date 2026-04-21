@@ -616,7 +616,7 @@ done:
 
         if (tmp == NULL) {
             DEBUG(SSSDBG_OP_FAILURE, "Failed to copy output data.\n");
-            ret = ENOMEM;
+            return ENOMEM;
         }
         ret = add_posix_to_json_string_array(mem_ctx,
                                                 &authentik_name_and_type_identifier,
