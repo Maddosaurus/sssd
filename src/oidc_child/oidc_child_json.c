@@ -507,13 +507,17 @@ const char *get_user_identifier(TALLOC_CTX *mem_ctx, json_t *userinfo,
 {
     json_t *id_object = NULL;
     const char *user_identifier = NULL;
-    const char *id_attr_list[] = { "sub", "id", NULL, NULL };
+    const char *id_attr_list[4];
+    int id_attr_index = 0;
     size_t c;
 
     if (user_identifier_attr != NULL) {
-        id_attr_list[2] = id_attr_list[0];
-        id_attr_list[0] = user_identifier_attr;
+        id_attr_list[id_attr_index++] = user_identifier_attr;
     }
+    id_attr_list[id_attr_index++] = "sub";
+    id_attr_list[id_attr_index++] = "id";
+    id_attr_list[id_attr_index] = NULL;
+
 
     for (c = 0; id_attr_list[c] != NULL; c++) {
         id_object = json_object_get(userinfo, id_attr_list[c]);
