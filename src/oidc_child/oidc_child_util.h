@@ -135,7 +135,7 @@ errno_t do_http_request_json_data(struct rest_ctx *rest_ctx, const char *uri,
 /* oidc_child_json.c */
 errno_t parse_openid_configuration(struct devicecode_ctx *dc_ctx);
 
-errno_t parse_result(struct devicecode_ctx *dc_ctx, char *idp_type);
+errno_t parse_result(struct devicecode_ctx *dc_ctx);
 
 errno_t parse_token_result(struct devicecode_ctx *dc_ctx,
                            char **error_description);
